@@ -414,6 +414,22 @@
     }
   }
 
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  #pdfFullscreenOverlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.95);
+    z-index: 2000;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.2s ease;
+  }
+  #pdfFullscreenOverlay.active { display: flex; }
+  #pdfFullscreenCanvas { max-width: 95vw; max-height: 90vh; border-radius: 4px; }
+
   /* Responsive */
   @media (max-width: 768px) {
     body {
@@ -500,20 +516,43 @@
     <div class="modal-body">
       <div class="modal-section" id="pdfSection" style="display: none;">
         <h3>📄 Zertifikat</h3>
-        <div style="background: var(--black); border-radius: 8px; overflow: hidden; margin-top: 1rem; aspect-ratio: 16/9; display: flex; align-items: center; justify-content: center;">
-          <iframe 
-            id="pdfViewer" 
-            style="width: 100%; height: 100%; border: none;"
-            allowfullscreen
-          ></iframe>
+        <div style="background: var(--black); border-radius: 8px; overflow: hidden; margin-top: 1rem; position: relative; cursor: pointer;" onclick="openPdfFullscreen()" onmouseover="document.getElementById('pdfHover').style.opacity='1'" onmouseout="document.getElementById('pdfHover').style.opacity='0'">
+          <canvas id="pdfCanvas" style="width: 100%; display: block;"></canvas>
+          <div id="pdfLoading" style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.75rem; min-height: 200px;">
+            <div style="width: 32px; height: 32px; border: 2px solid var(--accent); border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+            <span style="color: var(--text-secondary); font-size: 0.8rem;">PDF wird geladen...</span>
+          </div>
+          <div id="pdfHover" style="position: absolute; inset: 0; background: rgba(96,165,250,0.08); opacity: 0; transition: opacity 0.2s; display: flex; align-items: center; justify-content: center; pointer-events: none;">
+            <span style="background: var(--accent); color: var(--black); padding: 0.5rem 1rem; border-radius: 6px; font-weight: 600; font-size: 0.85rem;">🔍 Vergrössern</span>
+          </div>
         </div>
         <div style="margin-top: 1rem; text-align: center;">
-          <a id="pdfDownload" href="#" target="_blank" style="display: inline-block; background: var(--accent); color: var(--black); padding: 0.6rem 1.2rem; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 0.85rem; transition: all 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">⬇ PDF herunterladen</a>
+          <button onclick="openPdfFullscreen()" style="background: var(--accent); color: var(--black); border: none; padding: 0.6rem 1.4rem; border-radius: 6px; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">🔍 PDF vergrössern</button>
         </div>
       </div>
       <div class="modal-section" id="noPdfSection">
         <h3>📄 Zertifikat</h3>
         <p style="color: var(--text-secondary); font-style: italic;">Zertifikat-PDF wird noch hochgeladen</p>
+      </div>
+      <div class="modal-section">
+        <h3>Note</h3>
+        <div style="display: flex; align-items: center; gap: 1.2rem;">
+          <div style="background: linear-gradient(135deg, rgba(96,165,250,0.15), rgba(96,165,250,0.05)); border: 1px solid var(--accent); border-radius: 12px; padding: 1rem 1.8rem; text-align: center; min-width: 90px;">
+            <span id="modalGrade" style="font-size: 2.5rem; font-weight: 700; color: var(--accent); display: block; line-height: 1;">–</span>
+            <span style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.08em;">Modulnote</span>
+          </div>
+          <div>
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem;">
+              <div class="status-dot"></div>
+              <span style="color: var(--success); font-weight: 600; font-size: 0.9rem;">Bestanden</span>
+            </div>
+            <p id="modalGradeDate" style="font-size: 0.82rem; color: var(--text-secondary);">Datum: –</p>
+            <div id="modalGradeBar" style="margin-top: 0.6rem; height: 6px; background: var(--line); border-radius: 3px; width: 180px; overflow: hidden;">
+              <div id="modalGradeFill" style="height: 100%; border-radius: 3px; background: var(--accent); transition: width 0.6s ease; width: 0%;"></div>
+            </div>
+            <p style="font-size: 0.72rem; color: var(--text-secondary); margin-top: 0.3rem;">Skala 1–6</p>
+          </div>
+        </div>
       </div>
       <div class="modal-section">
         <h3>Details</h3>
@@ -527,13 +566,7 @@
         <h3>Kompetenzen</h3>
         <div class="cert-skills" id="modalSkills"></div>
       </div>
-      <div class="modal-section">
-        <h3>Status</h3>
-        <div style="display: flex; align-items: center; gap: 0.5rem;">
-          <div class="status-dot"></div>
-          <span style="color: var(--success); font-weight: 600;">Bestanden</span>
-        </div>
-      </div>
+
     </div>
   </div>
 </div>
@@ -548,8 +581,10 @@
       year: 2025,
       description: 'Aufbau und Verwaltung von Virtualisierungsplattformen. Praktische Anwendung von Hypervisoren und virtuellen Maschinen.',
       learningGoals: 'Virtualisierungsplattformen wie VMware oder Hyper-V einrichten, konfigurieren und optimieren. Virtualisierungstechnologien verstehen und anwenden.',
-      skills: ['Virtualisierung', 'VMware', 'Hyper-V', 'KVM', 'System Administration'],
-      pdfUrl: 'https://raw.githubusercontent.com/kanagaratnamsathuson-byte/-K/main/%C3%BCK-190-Kompetenznachweis%20(2).pdf' // PDF URL einfügen
+      grade: 5,
+grade_date: '25. März 2025',
+skills: ['Virtualisierung', 'VMware', 'Hyper-V', 'KVM', 'System Administration'],
+      pdfUrl: 'https://raw.githubusercontent.com/kanagaratnamsathuson-byte/-K/main/%C3%BCK-190-Kompetenznachweis%20(2).pdf'
     },
     {
       id: 2,
@@ -559,8 +594,10 @@
       year: 2025,
       description: 'Setup und Konfiguration von modernen ICT-Arbeitsplätzen mit verschiedenen Betriebssystemen.',
       learningGoals: 'Arbeitsplätze mit Windows, Linux und anderen OS konfigurieren. Hard- und Softwarekompatibilität gewährleisten.',
-      skills: ['Windows', 'Linux', 'macOS', 'Hardware Setup', 'System Configuration'],
-      pdfUrl: 'https://raw.githubusercontent.com/kanagaratnamsathuson-byte/-K/main/%C3%BCK-187-Kompetenznachweis%20(1).pdf' // PDF URL einfügen
+      grade: 5.5,
+grade_date: '24. September 2024',
+skills: ['Windows', 'Linux', 'macOS', 'Hardware Setup', 'System Configuration'],
+      pdfUrl: 'https://raw.githubusercontent.com/kanagaratnamsathuson-byte/-K/main/%C3%BCK-187-Kompetenznachweis%20(1).pdf'
     },
     {
       id: 3,
@@ -570,8 +607,10 @@
       year: 2025,
       description: 'Praktische Datenbankverwaltung mit SQL. Abfragen optimieren, Daten verwalten und Datenbanken warten.',
       learningGoals: 'SQL-Abfragen schreiben und optimieren. Datenbankstrukturen verstehen und pflegen. Backups und Recovery durchführen.',
-      skills: ['SQL', 'MySQL', 'PostgreSQL', 'Datenmodellierung', 'Maintenance'],
-      pdfUrl: 'https://raw.githubusercontent.com/kanagaratnamsathuson-byte/-K/main/%C3%BCK-106-Kompetenznachweis%20(1).pdf' // PDF URL einfügen
+      grade: 5,
+grade_date: '19. November 2024',
+skills: ['SQL', 'MySQL', 'PostgreSQL', 'Datenmodellierung', 'Maintenance'],
+      pdfUrl: 'https://raw.githubusercontent.com/kanagaratnamsathuson-byte/-K/main/%C3%BCK-106-Kompetenznachweis%20(1).pdf'
     },
     {
       id: 4,
@@ -581,8 +620,10 @@
       year: 2025,
       description: 'Integration von IoT-Geräten in bestehende Netzwerk- und Cloud-Plattformen.',
       learningGoals: 'IoT-Geräte konfigurieren und in Plattformen integrieren. Netzwerk- und Sicherheitsaspekte beachten. IoE-Konzepte verstehen.',
-      skills: ['IoT', 'Cloud Integration', 'Netzwerk', 'Sensorik', 'Edge Computing'],
-      pdfUrl: 'https://raw.githubusercontent.com/kanagaratnamsathuson-byte/-K/main/%C3%BCK-216-Kompetenznachweis%20(1).pdf' // PDF URL einfügen
+      grade: 4.5,
+grade_date: '10. Dezember 2024',
+skills: ['IoT', 'Cloud Integration', 'Netzwerk', 'Sensorik', 'Edge Computing'],
+      pdfUrl: 'https://raw.githubusercontent.com/kanagaratnamsathuson-byte/-K/main/%C3%BCK-216-Kompetenznachweis%20(1).pdf'
     },
     {
       id: 5,
@@ -592,8 +633,10 @@
       year: 2025,
       description: 'Betrieb und Überwachung von Diensten in öffentlichen Cloud-Umgebungen wie AWS, Azure oder Google Cloud.',
       learningGoals: 'Cloud-Dienste einrichten und konfigurieren. Monitoring und Alerting implementieren. Cloud-native Konzepte verstehen.',
-      skills: ['AWS', 'Azure', 'Google Cloud', 'Monitoring', 'Cloud Services', 'DevOps'],
-      pdfUrl: 'https://raw.githubusercontent.com/kanagaratnamsathuson-byte/-K/main/%C3%BCK-109-Kompetenznachweis%20(1).pdf' // PDF URL einfügen
+      grade: 4.5,
+grade_date: '24. Juni 2025',
+skills: ['AWS', 'Azure', 'Google Cloud', 'Monitoring', 'Cloud Services', 'DevOps'],
+      pdfUrl: 'https://raw.githubusercontent.com/kanagaratnamsathuson-byte/-K/main/%C3%BCK-109-Kompetenznachweis%20(1).pdf'
     },
     {
       id: 6,
@@ -603,8 +646,10 @@
       year: 2025,
       description: 'Implementierung von Sicherheitsmaßnahmen in Netzwerken. Firewalls, VPNs und Zugriffskontrolle konfigurieren.',
       learningGoals: 'Netzwerksicherheit planen und umsetzen. Firewalls und VPNs konfigurieren. Sicherheitsrichtlinien implementieren.',
-      skills: ['Firewall', 'VPN', 'Zugriffskontrolle', 'Verschlüsselung', 'Network Security', 'Intrusion Detection'],
-      pdfUrl: 'https://raw.githubusercontent.com/kanagaratnamsathuson-byte/-K/main/%C3%BCK-184-Kompetenznachweis%20(1).pdf' // PDF URL einfügen
+      grade: 4.5,
+grade_date: '13. Mai 2025',
+skills: ['Firewall', 'VPN', 'Zugriffskontrolle', 'Verschlüsselung', 'Network Security', 'Intrusion Detection'],
+      pdfUrl: 'https://raw.githubusercontent.com/kanagaratnamsathuson-byte/-K/main/%C3%BCK-184-Kompetenznachweis%20(1).pdf'
     },
     {
       id: 7,
@@ -614,8 +659,10 @@
       year: 2025,
       description: 'Wartung, Überwachung und Betrieb von IT-Dienste und Systemen im produktiven Umfeld.',
       learningGoals: 'Services überwachen und instand halten. Ticketing und Incident Management durchführen. Logs analysieren und optimieren.',
-      skills: ['Service Management', 'Monitoring', 'Maintenance', 'Incident Management', 'Log Analysis', 'Ticketing'],
-      pdfUrl: 'https://raw.githubusercontent.com/kanagaratnamsathuson-byte/-K/main/%C3%BCK-188-Kompetenznachweis%20(2).pdf' // PDF URL einfügen
+      grade: 4.5,
+grade_date: '11. Februar 2025',
+skills: ['Service Management', 'Monitoring', 'Maintenance', 'Incident Management', 'Log Analysis', 'Ticketing'],
+      pdfUrl: 'https://raw.githubusercontent.com/kanagaratnamsathuson-byte/-K/main/%C3%BCK-188-Kompetenznachweis%20(2).pdf'
     }
   ];
 
@@ -676,12 +723,23 @@
       .map(skill => `<span class="skill-tag">${skill}</span>`)
       .join('');
 
+    // Note
+    if (cert.grade) {
+      document.getElementById('modalGrade').textContent = cert.grade;
+      document.getElementById('modalGradeDate').textContent = 'Datum: ' + (cert.grade_date || '–');
+      const pct = ((cert.grade - 1) / 5) * 100;
+      document.getElementById('modalGradeFill').style.width = '0%';
+      setTimeout(() => { document.getElementById('modalGradeFill').style.width = pct + '%'; }, 100);
+      const color = cert.grade >= 5 ? '#10b981' : cert.grade >= 4 ? '#60a5fa' : '#f59e0b';
+      document.getElementById('modalGradeFill').style.background = color;
+      document.getElementById('modalGrade').style.color = color;
+    }
+
     // PDF Handling
     if (cert.pdfUrl && cert.pdfUrl.trim() !== '') {
       document.getElementById('pdfSection').style.display = 'block';
       document.getElementById('noPdfSection').style.display = 'none';
-      document.getElementById('pdfViewer').src = cert.pdfUrl;
-      document.getElementById('pdfDownload').href = cert.pdfUrl;
+      loadPdfPreview(cert.pdfUrl);
     } else {
       document.getElementById('pdfSection').style.display = 'none';
       document.getElementById('noPdfSection').style.display = 'block';
@@ -738,6 +796,61 @@
 
   // Initial render
   renderCertificates();
+</script>
+
+
+<!-- PDF Fullscreen Overlay -->
+<div id="pdfFullscreenOverlay" onclick="closePdfFullscreen()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:2000;flex-direction:column;align-items:center;justify-content:center;">
+  <button onclick="event.stopPropagation();closePdfFullscreen()" style="position:absolute;top:1.5rem;right:1.5rem;background:rgba(255,255,255,0.1);border:none;color:#fff;width:40px;height:40px;border-radius:50%;font-size:1.3rem;cursor:pointer;">&times;</button>
+  <canvas id="pdfFullscreenCanvas" style="max-width:95vw;max-height:90vh;border-radius:4px;"></canvas>
+  <p style="color:rgba(255,255,255,0.4);font-size:0.8rem;margin-top:1rem;">Klicken zum Schliessen</p>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  let currentPdfDoc = null;
+
+  async function loadPdfPreview(url) {
+    currentPdfDoc = null;
+    const canvas = document.getElementById('pdfCanvas');
+    const loading = document.getElementById('pdfLoading');
+    loading.style.display = 'flex';
+    canvas.style.display = 'none';
+    try {
+      const pdf = await pdfjsLib.getDocument(url).promise;
+      currentPdfDoc = pdf;
+      const page = await pdf.getPage(1);
+      const viewport = page.getViewport({ scale: 1.5 });
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+      loading.style.display = 'none';
+      canvas.style.display = 'block';
+    } catch(e) {
+      loading.innerHTML = '<span style="color:var(--text-secondary);font-size:0.85rem;padding:2rem;text-align:center;">Vorschau konnte nicht geladen werden.</span>';
+    }
+  }
+
+  async function openPdfFullscreen() {
+    if (!currentPdfDoc) return;
+    const overlay = document.getElementById('pdfFullscreenOverlay');
+    overlay.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    const page = await currentPdfDoc.getPage(1);
+    const vp1 = page.getViewport({scale:1});
+    const scale = Math.min((window.innerWidth * 0.95) / vp1.width, (window.innerHeight * 0.9) / vp1.height);
+    const viewport = page.getViewport({ scale });
+    const canvas = document.getElementById('pdfFullscreenCanvas');
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+    await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+  }
+
+  function closePdfFullscreen() {
+    document.getElementById('pdfFullscreenOverlay').style.display = 'none';
+    document.body.style.overflow = 'auto';
+  }
 </script>
 
 </body>
