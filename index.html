@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -74,6 +75,7 @@
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     gap: 1rem;
     margin-top: 1.5rem;
+    margin-bottom: 2.5rem;
   }
 
   .stat-card {
@@ -725,14 +727,25 @@ skills: ['Service Management', 'Monitoring', 'Maintenance', 'Incident Management
 
     // Note
     if (cert.grade) {
-      document.getElementById('modalGrade').textContent = cert.grade;
-      document.getElementById('modalGradeDate').textContent = 'Datum: ' + (cert.grade_date || '–');
-      const pct = ((cert.grade - 1) / 5) * 100;
-      document.getElementById('modalGradeFill').style.width = '0%';
-      setTimeout(() => { document.getElementById('modalGradeFill').style.width = pct + '%'; }, 100);
       const color = cert.grade >= 5 ? '#10b981' : cert.grade >= 4 ? '#60a5fa' : '#f59e0b';
-      document.getElementById('modalGradeFill').style.background = color;
+      const pct = ((cert.grade - 1) / 5) * 100;
+      document.getElementById('modalGrade').textContent = cert.grade;
       document.getElementById('modalGrade').style.color = color;
+      document.getElementById('modalGradeDate').textContent = 'Datum: ' + (cert.grade_date || '–');
+      document.getElementById('modalGradeFill').style.background = color;
+      document.getElementById('modalGradeFill').style.width = '0%';
+
+      // Animate bar only when visible
+      const bar = document.getElementById('modalGradeFill');
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            setTimeout(() => { bar.style.width = pct + '%'; }, 150);
+            observer.disconnect();
+          }
+        });
+      }, { threshold: 0.5 });
+      observer.observe(document.getElementById('modalGradeBar'));
     }
 
     // PDF Handling
