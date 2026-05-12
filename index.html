@@ -5,556 +5,326 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  
-  :root {
-    --black: #000000;
-    --white: #ffffff;
-    --accent: #60a5fa;
-    --accent-dark: #3b82f6;
-    --bg: #0a0a0a;
-    --line: #1a1a1a;
-    --panel: #1a1a1a;
-    --muted: #6b6b6b;
-    --success: #10b981;
-    --text-secondary: #9ca3af;
-  }
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
-  body {
-    font-family: 'DM Sans', sans-serif;
-    background: var(--bg);
-    color: var(--white);
-    padding: 2rem 2.5rem;
-    min-height: 100vh;
-  }
+:root {
+  --accent: #60a5fa; --accent-dark: #3b82f6;
+  --bg: #080810; --line: #1a1a2e; --panel: #131320;
+  --success: #4ade80; --text-secondary: #9ca3af;
+  --glow: rgba(96,165,250,0.3);
+}
 
-  .page {
-    max-width: 1200px;
-    margin: 0 auto;
-  }
+body { font-family:'DM Sans',sans-serif; background:var(--bg); color:#fff; padding:2rem 2.5rem; min-height:100vh; overflow-x:hidden; }
+canvas#starfield { position:fixed; inset:0; z-index:0; pointer-events:none; }
+.orb { position:fixed; border-radius:50%; pointer-events:none; filter:blur(80px); z-index:0; }
+.orb-1 { width:500px; height:500px; top:-100px; right:-100px; background:rgba(96,165,250,0.04); animation:orbFloat 12s ease-in-out infinite; }
+.orb-2 { width:400px; height:400px; bottom:-80px; left:-80px; background:rgba(74,222,128,0.03); animation:orbFloat 15s ease-in-out infinite reverse; }
+@keyframes orbFloat { 0%,100%{transform:translate(0,0) scale(1)} 33%{transform:translate(20px,-30px) scale(1.05)} 66%{transform:translate(-15px,20px) scale(0.95)} }
 
-  /* Header */
-  .header {
-    margin-bottom: 3rem;
-    animation: fadeUp 0.6s ease both;
-  }
+.page { max-width:1200px; margin:0 auto; position:relative; z-index:1; }
 
-  .header-back {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    color: var(--accent);
-    text-decoration: none;
-    font-size: 0.85rem;
-    margin-bottom: 1.5rem;
-    transition: all 0.2s;
-    cursor: pointer;
-  }
+/* ─── HEADER ─── */
+.header { margin-bottom:2.5rem; animation:fadeUp 0.7s cubic-bezier(0.16,1,0.3,1) both; }
 
-  .header-back:hover {
-    gap: 0.75rem;
-    color: var(--accent-dark);
-  }
+.header-back {
+  display:inline-flex; align-items:center; gap:0.5rem; color:var(--accent);
+  text-decoration:none; font-size:0.85rem; margin-bottom:1.5rem; transition:all 0.2s;
+  padding:0.4rem 0.8rem; border-radius:6px; border:1px solid rgba(96,165,250,0.2);
+  background:rgba(96,165,250,0.06);
+}
+.header-back:hover { gap:0.75rem; background:rgba(96,165,250,0.12); border-color:rgba(96,165,250,0.4); }
 
-  .header h1 {
-    font-family: 'DM Serif Display', serif;
-    font-size: 2.4rem;
-    margin-bottom: 0.5rem;
-    color: var(--white);
-  }
+.header h1 {
+  font-family:'DM Serif Display',serif; font-size:2.4rem; margin-bottom:0.5rem;
+  text-shadow:0 2px 4px rgba(0,0,0,0.5),0 0 24px rgba(96,165,250,0.1);
+}
+.header p { color:var(--text-secondary); font-size:0.95rem; letter-spacing:0.05em; }
 
-  .header p {
-    color: var(--text-secondary);
-    font-size: 0.95rem;
-    letter-spacing: 0.05em;
-  }
+/* ─── STAT CARDS ─── */
+.header-stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:1rem; margin-top:1.5rem; margin-bottom:2.5rem; }
 
-  .header-stats {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 1rem;
-    margin-top: 1.5rem;
-    margin-bottom: 2.5rem;
-  }
+.stat-card {
+  border-radius:10px; padding:1rem; text-align:center; cursor:default;
+  position:relative; overflow:hidden;
+  background:linear-gradient(145deg,#131320,#0e0e1c);
+  border:1px solid rgba(255,255,255,0.07);
+  box-shadow:0 4px 16px rgba(0,0,0,0.4),0 1px 0 rgba(255,255,255,0.04) inset;
+  transition:all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  animation:fadeUp 0.7s cubic-bezier(0.16,1,0.3,1) both;
+}
+.stat-card::before {
+  content:''; position:absolute; top:0; left:15%; right:15%; height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.07),transparent);
+}
+.stat-card::after {
+  content:''; position:absolute; inset:0;
+  background:radial-gradient(ellipse at 50% 0%,rgba(96,165,250,0.06),transparent 70%);
+}
+.stat-card:hover { transform:translateY(-4px) scale(1.02); border-color:rgba(96,165,250,0.25); box-shadow:0 12px 32px rgba(96,165,250,0.12),0 4px 16px rgba(0,0,0,0.5); }
 
-  .stat-card {
-    background: var(--panel);
-    border: 0.5px solid var(--line);
-    padding: 1rem;
-    border-radius: 8px;
-    text-align: center;
-  }
+.stat-number { font-size:1.8rem; font-weight:600; color:var(--accent); display:block; text-shadow:0 0 20px rgba(96,165,250,0.3); }
+.stat-label { font-size:0.72rem; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.08em; margin-top:0.25rem; }
 
-  .stat-number {
-    font-size: 1.8rem;
-    font-weight: 600;
-    color: var(--accent);
-    display: block;
-  }
+/* ─── CONTROLS ─── */
+.controls { display:flex; gap:1rem; align-items:center; margin-bottom:2rem; flex-wrap:wrap; }
 
-  .stat-label {
-    font-size: 0.75rem;
-    color: var(--text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-top: 0.25rem;
-  }
+.search-box {
+  flex:1; min-width:200px; padding:0.75rem 1rem; border-radius:8px;
+  color:#fff; font-size:0.9rem; font-family:'DM Sans',sans-serif;
+  background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08);
+  box-shadow:0 2px 8px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.04);
+  transition:all 0.25s;
+}
+.search-box::placeholder { color:var(--text-secondary); }
+.search-box:focus { outline:none; border-color:rgba(96,165,250,0.5); box-shadow:0 0 0 3px rgba(96,165,250,0.1),0 2px 8px rgba(0,0,0,0.3); }
 
-  /* Filter & Controls */
-  .controls {
-    display: flex;
-    gap: 1rem;
-    align-items: center;
-    margin-bottom: 2rem;
-    flex-wrap: wrap;
-  }
+.filter-btn {
+  padding:0.7rem 1rem; border-radius:8px; cursor:pointer; font-size:0.85rem;
+  font-family:'DM Sans',sans-serif; transition:all 0.25s;
+  background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); color:#fff;
+  box-shadow:0 2px 8px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.04);
+}
+.filter-btn:hover { border-color:rgba(96,165,250,0.4); color:var(--accent); background:rgba(96,165,250,0.06); }
+.filter-btn.active { background:var(--accent); border-color:var(--accent); color:#000; font-weight:600; box-shadow:0 4px 20px rgba(96,165,250,0.35); }
 
-  .search-box {
-    flex: 1;
-    min-width: 200px;
-    background: var(--panel);
-    border: 0.5px solid var(--line);
-    padding: 0.7rem 1rem;
-    border-radius: 8px;
-    color: var(--white);
-    font-size: 0.9rem;
-    transition: all 0.2s;
-  }
+/* ─── CERT GRID ─── */
+.certificates-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:1.5rem; margin-bottom:2rem; }
 
-  .search-box:focus {
-    outline: none;
-    border-color: var(--accent);
-    box-shadow: 0 0 12px rgba(96, 165, 250, 0.2);
-  }
+.cert-card {
+  border-radius:14px; overflow:hidden;
+  display:flex; flex-direction:column; cursor:pointer;
+  position:relative; transition:all 0.08s ease; will-change:transform;
+  transform-style:preserve-3d;
+  background:linear-gradient(145deg,#131320,#0e0e1c);
+  border:1px solid rgba(255,255,255,0.07);
+  box-shadow:0 4px 16px rgba(0,0,0,0.5),0 1px 0 rgba(255,255,255,0.04) inset;
+  animation:fadeUp 0.7s cubic-bezier(0.16,1,0.3,1) both;
+}
+.cert-card::before {
+  content:''; position:absolute; top:0; left:15%; right:15%; height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.07),transparent); z-index:1;
+}
+.cert-card:nth-child(1){animation-delay:0.1s} .cert-card:nth-child(2){animation-delay:0.18s}
+.cert-card:nth-child(3){animation-delay:0.26s} .cert-card:nth-child(4){animation-delay:0.34s}
+.cert-card:nth-child(5){animation-delay:0.42s} .cert-card:nth-child(6){animation-delay:0.5s}
+.cert-card:nth-child(7){animation-delay:0.58s}
 
-  .filter-btn {
-    background: var(--panel);
-    border: 0.5px solid var(--line);
-    color: var(--white);
-    padding: 0.7rem 1rem;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 0.85rem;
-    transition: all 0.2s;
-  }
+.cert-header {
+  padding:1.4rem 1.4rem 1.2rem;
+  border-bottom:1px solid rgba(255,255,255,0.05);
+  position:relative;
+  background:linear-gradient(135deg,rgba(96,165,250,0.07) 0%,rgba(96,165,250,0.02) 100%);
+}
+.cert-header::after {
+  content:''; position:absolute; inset:0;
+  background:radial-gradient(ellipse at 10% 0%,rgba(96,165,250,0.08),transparent 60%);
+  pointer-events:none;
+}
 
-  .filter-btn:hover {
-    border-color: var(--accent);
-    color: var(--accent);
-  }
+.cert-number { font-size:0.7rem; color:var(--accent); font-weight:700; letter-spacing:0.1em; text-transform:uppercase; margin-bottom:0.5rem; text-shadow:0 0 12px rgba(96,165,250,0.4); }
+.cert-title { font-size:1rem; font-weight:600; color:#fff; line-height:1.35; margin-bottom:0.5rem; }
+.cert-date { font-size:0.8rem; color:var(--text-secondary); display:flex; align-items:center; gap:0.5rem; }
 
-  .filter-btn.active {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: var(--black);
-  }
+.cert-body { padding:1.3rem; flex:1; display:flex; flex-direction:column; }
+.cert-description { font-size:0.84rem; line-height:1.65; color:rgba(255,255,255,0.55); margin-bottom:1rem; }
 
-  /* Certificate Grid */
-  .certificates-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 2rem;
-  }
+.cert-skills { display:flex; flex-wrap:wrap; gap:0.45rem; margin-bottom:1rem; }
+.skill-tag {
+  padding:0.28rem 0.65rem; border-radius:999px; font-size:0.74rem; font-weight:500;
+  background:rgba(96,165,250,0.08); border:1px solid rgba(96,165,250,0.25); color:var(--accent);
+  box-shadow:0 2px 6px rgba(0,0,0,0.2); transition:all 0.2s;
+}
+.skill-tag:hover { background:rgba(96,165,250,0.15); box-shadow:0 2px 12px rgba(96,165,250,0.2); transform:translateY(-1px); }
 
-  .cert-card {
-    background: var(--panel);
-    border: 1px solid var(--line);
-    border-radius: 12px;
-    overflow: hidden;
-    transition: all 0.3s cubic-bezier(0.23, 1, 0.320, 1);
-    cursor: pointer;
-    display: flex;
-    flex-direction: column;
-    animation: fadeUp 0.6s ease both;
-  }
+.cert-footer {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:0.9rem 1.3rem;
+  border-top:1px solid rgba(255,255,255,0.05);
+  background:rgba(0,0,0,0.2);
+  margin-top:auto;
+}
+.cert-status { display:flex; align-items:center; gap:0.5rem; font-size:0.8rem; color:var(--success); font-weight:600; }
+.status-dot { width:7px; height:7px; border-radius:50%; background:var(--success); box-shadow:0 0 8px rgba(74,222,128,0.7); }
 
-  .cert-card:nth-child(1) { animation-delay: 0.1s; }
-  .cert-card:nth-child(2) { animation-delay: 0.2s; }
-  .cert-card:nth-child(3) { animation-delay: 0.3s; }
-  .cert-card:nth-child(4) { animation-delay: 0.4s; }
-  .cert-card:nth-child(5) { animation-delay: 0.5s; }
-  .cert-card:nth-child(6) { animation-delay: 0.6s; }
-  .cert-card:nth-child(7) { animation-delay: 0.7s; }
+.cert-action {
+  padding:0.5rem 1.1rem; border-radius:6px; font-size:0.8rem; font-weight:600;
+  cursor:pointer; border:none; transition:all 0.25s; font-family:'DM Sans',sans-serif;
+  background:rgba(96,165,250,0.15); border:1px solid rgba(96,165,250,0.3); color:var(--accent);
+}
+.cert-action:hover { background:var(--accent); color:#000; box-shadow:0 4px 20px rgba(96,165,250,0.4); transform:translateY(-1px); }
 
-  .cert-card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 20px 40px rgba(96, 165, 250, 0.25);
-    border-color: var(--accent);
-  }
+/* ─── GRADE CARD ─── */
+.grade-display {
+  background:linear-gradient(135deg,rgba(96,165,250,0.12),rgba(96,165,250,0.04));
+  border:1px solid rgba(96,165,250,0.25); border-radius:12px;
+  padding:1rem 1.8rem; text-align:center; min-width:90px;
+  box-shadow:0 4px 20px rgba(96,165,250,0.1),inset 0 1px 0 rgba(96,165,250,0.1);
+  position:relative; overflow:hidden;
+}
+.grade-display::before { content:''; position:absolute; top:0; left:20%; right:20%; height:1px; background:linear-gradient(90deg,transparent,rgba(96,165,250,0.4),transparent); }
 
-  .cert-header {
-    background: linear-gradient(135deg, rgba(96, 165, 250, 0.1) 0%, rgba(96, 165, 250, 0.05) 100%);
-    padding: 1.5rem;
-    border-bottom: 1px solid var(--line);
-  }
+/* ─── MODAL ─── */
+.modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0); backdrop-filter:blur(0px); z-index:1000; align-items:center; justify-content:center; transition:background 0.4s,backdrop-filter 0.4s; }
+.modal.active { display:flex; background:rgba(0,0,0,0.75); backdrop-filter:blur(16px); }
 
-  .cert-number {
-    font-size: 0.7rem;
-    color: var(--accent);
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    margin-bottom: 0.5rem;
-  }
+.modal-content {
+  border-radius:16px; max-width:800px; width:90%; max-height:90vh; overflow-y:auto;
+  transform:scale(0.92) translateY(20px); opacity:0;
+  transition:transform 0.45s cubic-bezier(0.34,1.56,0.64,1),opacity 0.3s ease;
+  background:linear-gradient(145deg,#131320,#0e0e1c);
+  border:1px solid rgba(255,255,255,0.1);
+  box-shadow:0 40px 100px rgba(0,0,0,0.8),0 0 0 1px rgba(96,165,250,0.08),0 0 60px rgba(96,165,250,0.04);
+  position:relative; overflow:hidden;
+}
+.modal-content::before { content:''; position:absolute; top:0; left:15%; right:15%; height:1px; background:linear-gradient(90deg,transparent,rgba(96,165,250,0.4),transparent); z-index:1; }
+.modal.active .modal-content { transform:scale(1) translateY(0); opacity:1; }
 
-  .cert-title {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: var(--white);
-    line-height: 1.3;
-    margin-bottom: 0.5rem;
-  }
+.modal-header {
+  padding:1.8rem 2rem; border-bottom:1px solid rgba(255,255,255,0.06);
+  display:flex; justify-content:space-between; align-items:flex-start;
+  background:linear-gradient(135deg,rgba(96,165,250,0.06),transparent);
+}
 
-  .cert-date {
-    font-size: 0.8rem;
-    color: var(--text-secondary);
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
+.modal-close {
+  background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1);
+  color:#fff; font-size:1.2rem; cursor:pointer; width:32px; height:32px;
+  display:flex; align-items:center; justify-content:center; border-radius:8px; transition:all 0.2s;
+}
+.modal-close:hover { background:rgba(96,165,250,0.15); border-color:rgba(96,165,250,0.4); color:var(--accent); transform:scale(1.1); }
 
-  .cert-body {
-    padding: 1.5rem;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-  }
+.modal-body { padding:2rem; }
+.modal-section { margin-bottom:1.8rem; }
+.modal-section h3 { font-size:0.72rem; font-weight:700; color:var(--accent); text-transform:uppercase; letter-spacing:0.12em; margin-bottom:0.9rem; text-shadow:0 0 12px rgba(96,165,250,0.3); }
+.modal-section p { font-size:0.92rem; line-height:1.7; color:rgba(255,255,255,0.65); }
 
-  .cert-description {
-    font-size: 0.85rem;
-    line-height: 1.6;
-    color: var(--text-secondary);
-    margin-bottom: 1rem;
-  }
+/* ─── MODAL SCROLLBAR ─── */
+.modal-content::-webkit-scrollbar { width:4px; }
+.modal-content::-webkit-scrollbar-track { background:transparent; }
+.modal-content::-webkit-scrollbar-thumb { background:rgba(96,165,250,0.2); border-radius:2px; }
 
-  .cert-skills {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
-  }
+/* ─── EMPTY STATE ─── */
+.empty-state { text-align:center; padding:4rem 1rem; color:var(--text-secondary); }
+.empty-icon { font-size:3rem; margin-bottom:1rem; opacity:0.4; display:block; }
 
-  .skill-tag {
-    background: rgba(96, 165, 250, 0.1);
-    border: 0.5px solid var(--accent);
-    color: var(--accent);
-    padding: 0.3rem 0.7rem;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    font-weight: 500;
-  }
+/* ─── PDF FULLSCREEN ─── */
+#pdfFullscreenOverlay {
+  display:none; position:fixed; inset:0; background:rgba(0,0,0,0.95); z-index:2000;
+  flex-direction:column; align-items:center; justify-content:center; animation:fadeIn 0.2s ease;
+  backdrop-filter:blur(4px);
+}
+#pdfFullscreenOverlay.active { display:flex; }
+#pdfFullscreenCanvas { max-width:95vw; max-height:90vh; border-radius:8px; box-shadow:0 0 60px rgba(0,0,0,0.8),0 0 0 1px rgba(96,165,250,0.1); }
 
-  .cert-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem 1.5rem;
-    background: var(--black);
-    border-top: 0.5px solid var(--line);
-    margin-top: auto;
-  }
+/* ─── ANIMATIONS ─── */
+@keyframes fadeUp { from{opacity:0;transform:translateY(24px) scale(0.98)} to{opacity:1;transform:translateY(0) scale(1)} }
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+@keyframes spin { to{transform:rotate(360deg)} }
 
-  .cert-status {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.8rem;
-    color: var(--success);
-    font-weight: 600;
-  }
+/* ─── SCROLLBAR ─── */
+::-webkit-scrollbar { width:6px; } ::-webkit-scrollbar-track { background:#080810; } ::-webkit-scrollbar-thumb { background:rgba(96,165,250,0.2); border-radius:3px; }
 
-  .status-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--success);
-    box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
-  }
-
-  .cert-action {
-    background: var(--accent);
-    color: var(--black);
-    border: none;
-    padding: 0.5rem 1rem;
-    border-radius: 6px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .cert-action:hover {
-    background: var(--accent-dark);
-    transform: scale(1.05);
-  }
-
-  /* Modal / Details View */
-  .modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.8);
-    backdrop-filter: blur(4px);
-    z-index: 1000;
-    align-items: center;
-    justify-content: center;
-    animation: fadeIn 0.3s ease;
-  }
-
-  .modal.active {
-    display: flex;
-  }
-
-  .modal-content {
-    background: var(--panel);
-    border: 1px solid var(--line);
-    border-radius: 12px;
-    max-width: 800px;
-    width: 90%;
-    max-height: 90vh;
-    overflow-y: auto;
-    animation: slideUp 0.3s ease;
-  }
-
-  .modal-header {
-    padding: 2rem;
-    border-bottom: 1px solid var(--line);
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-  }
-
-  .modal-close {
-    background: none;
-    border: none;
-    color: var(--accent);
-    font-size: 1.5rem;
-    cursor: pointer;
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
-  }
-
-  .modal-close:hover {
-    color: var(--accent-dark);
-    transform: scale(1.1);
-  }
-
-  .modal-body {
-    padding: 2rem;
-  }
-
-  .modal-section {
-    margin-bottom: 2rem;
-  }
-
-  .modal-section h3 {
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: var(--accent);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    margin-bottom: 1rem;
-  }
-
-  .modal-section p {
-    font-size: 0.95rem;
-    line-height: 1.7;
-    color: var(--text-secondary);
-  }
-
-  /* Empty State */
-  .empty-state {
-    text-align: center;
-    padding: 3rem 1rem;
-    color: var(--text-secondary);
-  }
-
-  .empty-icon {
-    font-size: 3rem;
-    margin-bottom: 1rem;
-    opacity: 0.5;
-  }
-
-  /* Animations */
-  @keyframes fadeUp {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
-  }
-
-  @keyframes slideUp {
-    from {
-      opacity: 0;
-      transform: translateY(30px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  #pdfFullscreenOverlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.95);
-    z-index: 2000;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    animation: fadeIn 0.2s ease;
-  }
-  #pdfFullscreenOverlay.active { display: flex; }
-  #pdfFullscreenCanvas { max-width: 95vw; max-height: 90vh; border-radius: 4px; }
-
-  /* Responsive */
-  @media (max-width: 768px) {
-    body {
-      padding: 1.5rem;
-    }
-
-    .header h1 {
-      font-size: 1.8rem;
-    }
-
-    .certificates-grid {
-      grid-template-columns: 1fr;
-    }
-
-    .controls {
-      flex-direction: column;
-    }
-
-    .search-box {
-      min-width: 100%;
-    }
-
-    .header-stats {
-      grid-template-columns: repeat(2, 1fr);
-    }
-  }
+@media(max-width:768px) { body{padding:1.5rem} .header h1{font-size:1.8rem} .certificates-grid{grid-template-columns:1fr} .controls{flex-direction:column} .search-box{min-width:100%} .header-stats{grid-template-columns:repeat(2,1fr)} }
 </style>
 </head>
 <body>
+
+<canvas id="starfield"></canvas>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+
 <div class="page">
 
   <!-- Header -->
   <div class="header">
-    <a href="https://confluence.bit.admin.ch/spaces/viewspace.action?key=~u80875149" class="header-back" >← Zurück zur Startseite</a>
+    <a href="https://confluence.bit.admin.ch/spaces/viewspace.action?key=~u80875149" class="header-back">← Zurück zur Startseite</a>
     <h1>ÜK Zertifikate</h1>
     <p>Überbetriebliche Kurse · Berufsausbildung</p>
   </div>
 
   <!-- Stats -->
   <div class="header-stats">
-    <div class="stat-card">
+    <div class="stat-card" style="animation-delay:0.1s">
       <span class="stat-number">7</span>
       <span class="stat-label">Zertifikate</span>
     </div>
-    <div class="stat-card">
+    <div class="stat-card" style="animation-delay:0.18s">
       <span class="stat-number">2025</span>
       <span class="stat-label">Jahrgang</span>
     </div>
-    <div class="stat-card">
+    <div class="stat-card" style="animation-delay:0.26s">
       <span class="stat-number">100%</span>
       <span class="stat-label">Bestanden</span>
     </div>
   </div>
 
-  <!-- Search & Filter -->
+  <!-- Controls -->
   <div class="controls">
-    <input 
-      type="text" 
-      id="searchInput" 
-      class="search-box" 
-      placeholder="Nach Zertifikat suchen..."
-    >
+    <input type="text" id="searchInput" class="search-box" placeholder="Nach Zertifikat suchen…">
     <button class="filter-btn active" data-filter="all">Alle</button>
     <button class="filter-btn" data-filter="2025">2025</button>
   </div>
 
-  <!-- Certificates Grid -->
-  <div class="certificates-grid" id="certificatesGrid">
-    <!-- Cards werden via JavaScript eingefügt -->
-  </div>
+  <!-- Grid -->
+  <div class="certificates-grid" id="certificatesGrid"></div>
 
 </div>
 
-<!-- Modal / Details -->
+<!-- Modal -->
 <div class="modal" id="detailsModal">
   <div class="modal-content">
     <div class="modal-header">
       <div>
         <div class="cert-number" id="modalNumber"></div>
-        <h2 style="font-size: 1.5rem; margin-top: 0.5rem;" id="modalTitle"></h2>
+        <h2 style="font-size:1.4rem;margin-top:0.4rem;font-family:'DM Serif Display',serif;" id="modalTitle"></h2>
       </div>
-      <button class="modal-close" onclick="closeModal()">&times;</button>
+      <button class="modal-close" onclick="closeModal()">✕</button>
     </div>
     <div class="modal-body">
-      <div class="modal-section" id="pdfSection" style="display: none;">
+
+      <!-- PDF -->
+      <div class="modal-section" id="pdfSection" style="display:none;">
         <h3>📄 Zertifikat</h3>
-        <div style="background: var(--black); border-radius: 8px; overflow: hidden; margin-top: 1rem; position: relative; cursor: pointer;" onclick="openPdfFullscreen()" onmouseover="document.getElementById('pdfHover').style.opacity='1'" onmouseout="document.getElementById('pdfHover').style.opacity='0'">
-          <canvas id="pdfCanvas" style="width: 100%; display: block;"></canvas>
-          <div id="pdfLoading" style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.75rem; min-height: 200px;">
-            <div style="width: 32px; height: 32px; border: 2px solid var(--accent); border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
-            <span style="color: var(--text-secondary); font-size: 0.8rem;">PDF wird geladen...</span>
+        <div style="border-radius:10px;overflow:hidden;margin-top:0.75rem;position:relative;cursor:pointer;border:1px solid rgba(96,165,250,0.15);box-shadow:0 4px 20px rgba(0,0,0,0.4);" onclick="openPdfFullscreen()" onmouseover="document.getElementById('pdfHover').style.opacity='1'" onmouseout="document.getElementById('pdfHover').style.opacity='0'">
+          <canvas id="pdfCanvas" style="width:100%;display:block;background:#050510;"></canvas>
+          <div id="pdfLoading" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.75rem;min-height:200px;background:#050510;">
+            <div style="width:32px;height:32px;border:2px solid var(--accent);border-top-color:transparent;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+            <span style="color:var(--text-secondary);font-size:0.8rem;">PDF wird geladen…</span>
           </div>
-          <div id="pdfHover" style="position: absolute; inset: 0; background: rgba(96,165,250,0.08); opacity: 0; transition: opacity 0.2s; display: flex; align-items: center; justify-content: center; pointer-events: none;">
-            <span style="background: var(--accent); color: var(--black); padding: 0.5rem 1rem; border-radius: 6px; font-weight: 600; font-size: 0.85rem;">🔍 Vergrössern</span>
+          <div id="pdfHover" style="position:absolute;inset:0;background:rgba(96,165,250,0.06);opacity:0;transition:opacity 0.2s;display:flex;align-items:center;justify-content:center;pointer-events:none;">
+            <span style="background:var(--accent);color:#000;padding:0.5rem 1.1rem;border-radius:6px;font-weight:700;font-size:0.82rem;">🔍 Vergrössern</span>
           </div>
         </div>
-        <div style="margin-top: 1rem; text-align: center;">
-          <button onclick="openPdfFullscreen()" style="background: var(--accent); color: var(--black); border: none; padding: 0.6rem 1.4rem; border-radius: 6px; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">🔍 PDF vergrössern</button>
+        <div style="margin-top:0.9rem;text-align:center;">
+          <button onclick="openPdfFullscreen()" style="background:rgba(96,165,250,0.1);border:1px solid rgba(96,165,250,0.3);color:var(--accent);padding:0.55rem 1.3rem;border-radius:6px;font-weight:600;font-size:0.82rem;cursor:pointer;transition:all 0.2s;font-family:'DM Sans',sans-serif;" onmouseover="this.style.background='var(--accent)';this.style.color='#000'" onmouseout="this.style.background='rgba(96,165,250,0.1)';this.style.color='var(--accent)'">🔍 PDF vergrössern</button>
         </div>
       </div>
       <div class="modal-section" id="noPdfSection">
         <h3>📄 Zertifikat</h3>
-        <p style="color: var(--text-secondary); font-style: italic;">Zertifikat-PDF wird noch hochgeladen</p>
+        <p style="font-style:italic;color:var(--text-secondary);">Zertifikat-PDF wird noch hochgeladen</p>
       </div>
+
+      <!-- Note -->
       <div class="modal-section">
         <h3>Note</h3>
-        <div style="display: flex; align-items: center; gap: 1.2rem;">
-          <div style="background: linear-gradient(135deg, rgba(96,165,250,0.15), rgba(96,165,250,0.05)); border: 1px solid var(--accent); border-radius: 12px; padding: 1rem 1.8rem; text-align: center; min-width: 90px;">
-            <span id="modalGrade" style="font-size: 2.5rem; font-weight: 700; color: var(--accent); display: block; line-height: 1;">–</span>
-            <span style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.08em;">Modulnote</span>
+        <div style="display:flex;align-items:center;gap:1.2rem;">
+          <div class="grade-display">
+            <span id="modalGrade" style="font-size:2.5rem;font-weight:700;color:var(--accent);display:block;line-height:1;">–</span>
+            <span style="font-size:0.7rem;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.08em;">Modulnote</span>
           </div>
           <div>
-            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem;">
+            <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.4rem;">
               <div class="status-dot"></div>
-              <span style="color: var(--success); font-weight: 600; font-size: 0.9rem;">Bestanden</span>
+              <span style="color:var(--success);font-weight:600;font-size:0.9rem;">Bestanden</span>
             </div>
-            <p id="modalGradeDate" style="font-size: 0.82rem; color: var(--text-secondary);">Datum: –</p>
-            <div id="modalGradeBar" style="margin-top: 0.6rem; height: 6px; background: var(--line); border-radius: 3px; width: 180px; overflow: hidden;">
-              <div id="modalGradeFill" style="height: 100%; border-radius: 3px; background: var(--accent); transition: width 0.6s ease; width: 0%;"></div>
+            <p id="modalGradeDate" style="font-size:0.82rem;color:var(--text-secondary);">Datum: –</p>
+            <div id="modalGradeBar" style="margin-top:0.6rem;height:5px;background:rgba(255,255,255,0.06);border-radius:999px;width:180px;overflow:hidden;box-shadow:inset 0 1px 3px rgba(0,0,0,0.4);">
+              <div id="modalGradeFill" style="height:100%;border-radius:999px;transition:width 0.8s cubic-bezier(0.4,0,0.2,1);width:0%;box-shadow:0 0 8px rgba(96,165,250,0.4);"></div>
             </div>
-            <p style="font-size: 0.72rem; color: var(--text-secondary); margin-top: 0.3rem;">Skala 1–6</p>
+            <p style="font-size:0.72rem;color:var(--text-secondary);margin-top:0.3rem;">Skala 1–6</p>
           </div>
         </div>
       </div>
+
       <div class="modal-section">
         <h3>Details</h3>
         <p id="modalDescription"></p>
@@ -572,298 +342,205 @@
   </div>
 </div>
 
-<script>
-  const certificates = [
-    {
-      id: 1,
-      number: 'ÜK-190',
-      title: 'Virtualisierungsplattform aufbauen und betreiben',
-      date: '2025',
-      year: 2025,
-      description: 'Aufbau und Verwaltung von Virtualisierungsplattformen. Praktische Anwendung von Hypervisoren und virtuellen Maschinen.',
-      learningGoals: 'Virtualisierungsplattformen wie VMware oder Hyper-V einrichten, konfigurieren und optimieren. Virtualisierungstechnologien verstehen und anwenden.',
-      grade: 5,
-grade_date: '25. März 2025',
-skills: ['Virtualisierung', 'VMware', 'Hyper-V', 'KVM', 'System Administration'],
-      pdfUrl: 'https://raw.githubusercontent.com/kanagaratnamsathuson-byte/-K/main/%C3%BCK-190-Kompetenznachweis%20(2).pdf'
-    },
-    {
-      id: 2,
-      number: 'ÜK-187',
-      title: 'ICT-Arbeitsplatz mit Betriebssystem in Betrieb nehmen',
-      date: '2025',
-      year: 2025,
-      description: 'Setup und Konfiguration von modernen ICT-Arbeitsplätzen mit verschiedenen Betriebssystemen.',
-      learningGoals: 'Arbeitsplätze mit Windows, Linux und anderen OS konfigurieren. Hard- und Softwarekompatibilität gewährleisten.',
-      grade: 5.5,
-grade_date: '24. September 2024',
-skills: ['Windows', 'Linux', 'macOS', 'Hardware Setup', 'System Configuration'],
-      pdfUrl: 'https://raw.githubusercontent.com/kanagaratnamsathuson-byte/-K/main/%C3%BCK-187-Kompetenznachweis%20(1).pdf'
-    },
-    {
-      id: 3,
-      number: 'ÜK-106',
-      title: 'Datenbanken abfragen, bearbeiten und warten',
-      date: '2025',
-      year: 2025,
-      description: 'Praktische Datenbankverwaltung mit SQL. Abfragen optimieren, Daten verwalten und Datenbanken warten.',
-      learningGoals: 'SQL-Abfragen schreiben und optimieren. Datenbankstrukturen verstehen und pflegen. Backups und Recovery durchführen.',
-      grade: 5,
-grade_date: '19. November 2024',
-skills: ['SQL', 'MySQL', 'PostgreSQL', 'Datenmodellierung', 'Maintenance'],
-      pdfUrl: 'https://raw.githubusercontent.com/kanagaratnamsathuson-byte/-K/main/%C3%BCK-106-Kompetenznachweis%20(1).pdf'
-    },
-    {
-      id: 4,
-      number: 'ÜK-216',
-      title: 'Internet of Everything - Endgeräte in bestehende Plattform integrieren',
-      date: '2025',
-      year: 2025,
-      description: 'Integration von IoT-Geräten in bestehende Netzwerk- und Cloud-Plattformen.',
-      learningGoals: 'IoT-Geräte konfigurieren und in Plattformen integrieren. Netzwerk- und Sicherheitsaspekte beachten. IoE-Konzepte verstehen.',
-      grade: 4.5,
-grade_date: '10. Dezember 2024',
-skills: ['IoT', 'Cloud Integration', 'Netzwerk', 'Sensorik', 'Edge Computing'],
-      pdfUrl: 'https://raw.githubusercontent.com/kanagaratnamsathuson-byte/-K/main/%C3%BCK-216-Kompetenznachweis%20(1).pdf'
-    },
-    {
-      id: 5,
-      number: 'ÜK-109',
-      title: 'Dienste in der Public Cloud betreiben und überwachen',
-      date: '2025',
-      year: 2025,
-      description: 'Betrieb und Überwachung von Diensten in öffentlichen Cloud-Umgebungen wie AWS, Azure oder Google Cloud.',
-      learningGoals: 'Cloud-Dienste einrichten und konfigurieren. Monitoring und Alerting implementieren. Cloud-native Konzepte verstehen.',
-      grade: 4.5,
-grade_date: '24. Juni 2025',
-skills: ['AWS', 'Azure', 'Google Cloud', 'Monitoring', 'Cloud Services', 'DevOps'],
-      pdfUrl: 'https://raw.githubusercontent.com/kanagaratnamsathuson-byte/-K/main/%C3%BCK-109-Kompetenznachweis%20(1).pdf'
-    },
-    {
-      id: 6,
-      number: 'ÜK-184',
-      title: 'Netzwerksicherheit implementieren',
-      date: '2025',
-      year: 2025,
-      description: 'Implementierung von Sicherheitsmaßnahmen in Netzwerken. Firewalls, VPNs und Zugriffskontrolle konfigurieren.',
-      learningGoals: 'Netzwerksicherheit planen und umsetzen. Firewalls und VPNs konfigurieren. Sicherheitsrichtlinien implementieren.',
-      grade: 4.5,
-grade_date: '13. Mai 2025',
-skills: ['Firewall', 'VPN', 'Zugriffskontrolle', 'Verschlüsselung', 'Network Security', 'Intrusion Detection'],
-      pdfUrl: 'https://raw.githubusercontent.com/kanagaratnamsathuson-byte/-K/main/%C3%BCK-184-Kompetenznachweis%20(1).pdf'
-    },
-    {
-      id: 7,
-      number: 'ÜK-188',
-      title: 'Services warten, überwachen und betreiben',
-      date: '2025',
-      year: 2025,
-      description: 'Wartung, Überwachung und Betrieb von IT-Dienste und Systemen im produktiven Umfeld.',
-      learningGoals: 'Services überwachen und instand halten. Ticketing und Incident Management durchführen. Logs analysieren und optimieren.',
-      grade: 4.5,
-grade_date: '11. Februar 2025',
-skills: ['Service Management', 'Monitoring', 'Maintenance', 'Incident Management', 'Log Analysis', 'Ticketing'],
-      pdfUrl: 'https://raw.githubusercontent.com/kanagaratnamsathuson-byte/-K/main/%C3%BCK-188-Kompetenznachweis%20(2).pdf'
-    }
-  ];
-
-  let filteredCerts = [...certificates];
-
-  function renderCertificates() {
-    const grid = document.getElementById('certificatesGrid');
-    
-    if (filteredCerts.length === 0) {
-      grid.innerHTML = `
-        <div style="grid-column: 1 / -1;">
-          <div class="empty-state">
-            <div class="empty-icon">🔍</div>
-            <h3 style="margin-bottom: 0.5rem;">Keine Zertifikate gefunden</h3>
-            <p>Versuche eine andere Suche oder Filter</p>
-          </div>
-        </div>
-      `;
-      return;
-    }
-
-    grid.innerHTML = filteredCerts.map(cert => `
-      <div class="cert-card" onclick="openModal(${cert.id})">
-        <div class="cert-header">
-          <div class="cert-number">${cert.number}</div>
-          <div class="cert-title">${cert.title}</div>
-          <div class="cert-date">
-            <span>📅</span>
-            <span>${cert.date}</span>
-          </div>
-        </div>
-        <div class="cert-body">
-          <p class="cert-description">${cert.description}</p>
-          <div class="cert-skills">
-            ${cert.skills.slice(0, 3).map(skill => `<span class="skill-tag">${skill}</span>`).join('')}
-          </div>
-        </div>
-        <div class="cert-footer">
-          <div class="cert-status">
-            <span class="status-dot"></span>
-            Bestanden
-          </div>
-          <button class="cert-action">Details →</button>
-        </div>
-      </div>
-    `).join('');
-  }
-
-  function openModal(certId) {
-    const cert = certificates.find(c => c.id === certId);
-    if (!cert) return;
-
-    document.getElementById('modalNumber').textContent = cert.number;
-    document.getElementById('modalTitle').textContent = cert.title;
-    document.getElementById('modalDescription').textContent = cert.description;
-    document.getElementById('modalLearningGoals').textContent = cert.learningGoals;
-    document.getElementById('modalSkills').innerHTML = cert.skills
-      .map(skill => `<span class="skill-tag">${skill}</span>`)
-      .join('');
-
-    // Note
-    if (cert.grade) {
-      const color = cert.grade >= 5 ? '#10b981' : cert.grade >= 4 ? '#60a5fa' : '#f59e0b';
-      const pct = ((cert.grade - 1) / 5) * 100;
-      document.getElementById('modalGrade').textContent = cert.grade;
-      document.getElementById('modalGrade').style.color = color;
-      document.getElementById('modalGradeDate').textContent = 'Datum: ' + (cert.grade_date || '–');
-      document.getElementById('modalGradeFill').style.background = color;
-      document.getElementById('modalGradeFill').style.width = '0%';
-
-      // Animate bar only when visible
-      const bar = document.getElementById('modalGradeFill');
-      const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            setTimeout(() => { bar.style.width = pct + '%'; }, 150);
-            observer.disconnect();
-          }
-        });
-      }, { threshold: 0.5 });
-      observer.observe(document.getElementById('modalGradeBar'));
-    }
-
-    // PDF Handling
-    if (cert.pdfUrl && cert.pdfUrl.trim() !== '') {
-      document.getElementById('pdfSection').style.display = 'block';
-      document.getElementById('noPdfSection').style.display = 'none';
-      loadPdfPreview(cert.pdfUrl);
-    } else {
-      document.getElementById('pdfSection').style.display = 'none';
-      document.getElementById('noPdfSection').style.display = 'block';
-    }
-
-    document.getElementById('detailsModal').classList.add('active');
-    document.body.style.overflow = 'hidden';
-  }
-
-  function closeModal() {
-    document.getElementById('detailsModal').classList.remove('active');
-    document.body.style.overflow = 'auto';
-  }
-
-  function applyFilters() {
-    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-    const activeFilter = document.querySelector('.filter-btn.active').dataset.filter;
-
-    filteredCerts = certificates.filter(cert => {
-      const matchesSearch = 
-        cert.title.toLowerCase().includes(searchTerm) ||
-        cert.number.toLowerCase().includes(searchTerm);
-      
-      const matchesFilter = activeFilter === 'all' || cert.year.toString() === activeFilter;
-
-      return matchesSearch && matchesFilter;
-    });
-
-    renderCertificates();
-  }
-
-  // Event Listeners
-  document.getElementById('searchInput').addEventListener('input', applyFilters);
-
-  document.querySelectorAll('.filter-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-      e.target.classList.add('active');
-      applyFilters();
-    });
-  });
-
-  document.getElementById('detailsModal').addEventListener('click', (e) => {
-    if (e.target.id === 'detailsModal') {
-      closeModal();
-    }
-  });
-
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      closeModal();
-    }
-  });
-
-  // Initial render
-  renderCertificates();
-</script>
-
-
-<!-- PDF Fullscreen Overlay -->
-<div id="pdfFullscreenOverlay" onclick="closePdfFullscreen()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:2000;flex-direction:column;align-items:center;justify-content:center;">
-  <button onclick="event.stopPropagation();closePdfFullscreen()" style="position:absolute;top:1.5rem;right:1.5rem;background:rgba(255,255,255,0.1);border:none;color:#fff;width:40px;height:40px;border-radius:50%;font-size:1.3rem;cursor:pointer;">&times;</button>
-  <canvas id="pdfFullscreenCanvas" style="max-width:95vw;max-height:90vh;border-radius:4px;"></canvas>
-  <p style="color:rgba(255,255,255,0.4);font-size:0.8rem;margin-top:1rem;">Klicken zum Schliessen</p>
+<!-- PDF Fullscreen -->
+<div id="pdfFullscreenOverlay" onclick="closePdfFullscreen()">
+  <button onclick="event.stopPropagation();closePdfFullscreen()" style="position:absolute;top:1.5rem;right:1.5rem;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);color:#fff;width:40px;height:40px;border-radius:50%;font-size:1.2rem;cursor:pointer;transition:background 0.2s;" onmouseover="this.style.background='rgba(96,165,250,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.08)'">✕</button>
+  <canvas id="pdfFullscreenCanvas"></canvas>
+  <p style="color:rgba(255,255,255,0.3);font-size:0.78rem;margin-top:1rem;">Klicken zum Schliessen</p>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script>
-  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-  let currentPdfDoc = null;
+/* ─── DATA ─── */
+const certificates = [
+  { id:1, number:'ÜK-190', title:'Virtualisierungsplattform aufbauen und betreiben', date:'2025', year:2025, description:'Aufbau und Verwaltung von Virtualisierungsplattformen. Praktische Anwendung von Hypervisoren und virtuellen Maschinen.', learningGoals:'Virtualisierungsplattformen wie VMware oder Hyper-V einrichten, konfigurieren und optimieren. Virtualisierungstechnologien verstehen und anwenden.', grade:5, grade_date:'25. März 2025', skills:['Virtualisierung','VMware','Hyper-V','KVM','System Administration'], pdfUrl:'https://raw.githubusercontent.com/kanagaratnamsathuson-byte/-K/main/%C3%BCK-190-Kompetenznachweis%20(2).pdf' },
+  { id:2, number:'ÜK-187', title:'ICT-Arbeitsplatz mit Betriebssystem in Betrieb nehmen', date:'2025', year:2025, description:'Setup und Konfiguration von modernen ICT-Arbeitsplätzen mit verschiedenen Betriebssystemen.', learningGoals:'Arbeitsplätze mit Windows, Linux und anderen OS konfigurieren. Hard- und Softwarekompatibilität gewährleisten.', grade:5.5, grade_date:'24. September 2024', skills:['Windows','Linux','macOS','Hardware Setup','System Configuration'], pdfUrl:'https://raw.githubusercontent.com/kanagaratnamsathuson-byte/-K/main/%C3%BCK-187-Kompetenznachweis%20(1).pdf' },
+  { id:3, number:'ÜK-106', title:'Datenbanken abfragen, bearbeiten und warten', date:'2025', year:2025, description:'Praktische Datenbankverwaltung mit SQL. Abfragen optimieren, Daten verwalten und Datenbanken warten.', learningGoals:'SQL-Abfragen schreiben und optimieren. Datenbankstrukturen verstehen und pflegen. Backups und Recovery durchführen.', grade:5, grade_date:'19. November 2024', skills:['SQL','MySQL','PostgreSQL','Datenmodellierung','Maintenance'], pdfUrl:'https://raw.githubusercontent.com/kanagaratnamsathuson-byte/-K/main/%C3%BCK-106-Kompetenznachweis%20(1).pdf' },
+  { id:4, number:'ÜK-216', title:'Internet of Everything – Endgeräte in bestehende Plattform integrieren', date:'2025', year:2025, description:'Integration von IoT-Geräten in bestehende Netzwerk- und Cloud-Plattformen.', learningGoals:'IoT-Geräte konfigurieren und in Plattformen integrieren. Netzwerk- und Sicherheitsaspekte beachten.', grade:4.5, grade_date:'10. Dezember 2024', skills:['IoT','Cloud Integration','Netzwerk','Sensorik','Edge Computing'], pdfUrl:'https://raw.githubusercontent.com/kanagaratnamsathuson-byte/-K/main/%C3%BCK-216-Kompetenznachweis%20(1).pdf' },
+  { id:5, number:'ÜK-109', title:'Dienste in der Public Cloud betreiben und überwachen', date:'2025', year:2025, description:'Betrieb und Überwachung von Diensten in öffentlichen Cloud-Umgebungen wie AWS, Azure oder Google Cloud.', learningGoals:'Cloud-Dienste einrichten und konfigurieren. Monitoring und Alerting implementieren.', grade:4.5, grade_date:'24. Juni 2025', skills:['AWS','Azure','Google Cloud','Monitoring','Cloud Services','DevOps'], pdfUrl:'https://raw.githubusercontent.com/kanagaratnamsathuson-byte/-K/main/%C3%BCK-109-Kompetenznachweis%20(1).pdf' },
+  { id:6, number:'ÜK-184', title:'Netzwerksicherheit implementieren', date:'2025', year:2025, description:'Implementierung von Sicherheitsmaßnahmen in Netzwerken. Firewalls, VPNs und Zugriffskontrolle konfigurieren.', learningGoals:'Netzwerksicherheit planen und umsetzen. Firewalls und VPNs konfigurieren. Sicherheitsrichtlinien implementieren.', grade:4.5, grade_date:'13. Mai 2025', skills:['Firewall','VPN','Zugriffskontrolle','Verschlüsselung','Network Security','Intrusion Detection'], pdfUrl:'https://raw.githubusercontent.com/kanagaratnamsathuson-byte/-K/main/%C3%BCK-184-Kompetenznachweis%20(1).pdf' },
+  { id:7, number:'ÜK-188', title:'Services warten, überwachen und betreiben', date:'2025', year:2025, description:'Wartung, Überwachung und Betrieb von IT-Diensten und Systemen im produktiven Umfeld.', learningGoals:'Services überwachen und instand halten. Ticketing und Incident Management durchführen. Logs analysieren.', grade:4.5, grade_date:'11. Februar 2025', skills:['Service Management','Monitoring','Maintenance','Incident Management','Log Analysis','Ticketing'], pdfUrl:'https://raw.githubusercontent.com/kanagaratnamsathuson-byte/-K/main/%C3%BCK-188-Kompetenznachweis%20(2).pdf' }
+];
 
-  async function loadPdfPreview(url) {
-    currentPdfDoc = null;
-    const canvas = document.getElementById('pdfCanvas');
-    const loading = document.getElementById('pdfLoading');
-    loading.style.display = 'flex';
-    canvas.style.display = 'none';
-    try {
-      const pdf = await pdfjsLib.getDocument(url).promise;
-      currentPdfDoc = pdf;
-      const page = await pdf.getPage(1);
-      const viewport = page.getViewport({ scale: 1.5 });
-      canvas.width = viewport.width;
-      canvas.height = viewport.height;
-      await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
-      loading.style.display = 'none';
-      canvas.style.display = 'block';
-    } catch(e) {
-      loading.innerHTML = '<span style="color:var(--text-secondary);font-size:0.85rem;padding:2rem;text-align:center;">Vorschau konnte nicht geladen werden.</span>';
+let filteredCerts = [...certificates];
+
+/* ─── STARFIELD ─── */
+(function() {
+  const canvas = document.getElementById('starfield');
+  const ctx = canvas.getContext('2d');
+  let W, H, stars = [], mouse = { x:0.5, y:0.5 };
+  function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+  resize(); window.addEventListener('resize', resize);
+  for (let i = 0; i < 200; i++) stars.push({ x:Math.random(), y:Math.random(), z:Math.random(), size:Math.random()*1.4+0.2, opacity:Math.random()*0.55+0.1, speed:Math.random()*0.00012+0.00004, twinkle:Math.random()*Math.PI*2 });
+  let t = 0;
+  function draw() {
+    ctx.clearRect(0,0,W,H); t += 0.012;
+    const px = (mouse.x-0.5)*28, py = (mouse.y-0.5)*18;
+    for (const s of stars) {
+      s.twinkle += 0.014;
+      const tw = Math.sin(s.twinkle)*0.3+0.7;
+      const ox = px*s.z*0.5, oy = py*s.z*0.5;
+      const sx = (s.x+s.speed*t*(0.3+s.z*0.7))%1;
+      const screenX = sx*W+ox, screenY = s.y*H+oy;
+      const alpha = s.opacity*tw, sz = s.size*(0.4+s.z*0.8);
+      if (s.z > 0.65) {
+        const g = ctx.createRadialGradient(screenX,screenY,0,screenX,screenY,sz*3);
+        g.addColorStop(0,`rgba(150,200,255,${alpha*0.5})`); g.addColorStop(1,'rgba(0,0,0,0)');
+        ctx.fillStyle=g; ctx.beginPath(); ctx.arc(screenX,screenY,sz*3,0,Math.PI*2); ctx.fill();
+      }
+      ctx.fillStyle=`rgba(200,220,255,${alpha})`; ctx.beginPath(); ctx.arc(screenX,screenY,sz,0,Math.PI*2); ctx.fill();
     }
+    requestAnimationFrame(draw);
+  }
+  draw();
+  document.addEventListener('mousemove', e => { mouse.x=e.clientX/window.innerWidth; mouse.y=e.clientY/window.innerHeight; });
+})();
+
+/* ─── 3D TILT ON CARDS ─── */
+function applyTilt(cards) {
+  cards.forEach(card => {
+    let raf=null, tX=0, tY=0, cX=0, cY=0;
+    card.addEventListener('mousemove', e => {
+      const r = card.getBoundingClientRect();
+      tX = -((e.clientY-r.top-r.height/2)/(r.height/2))*7;
+      tY = ((e.clientX-r.left-r.width/2)/(r.width/2))*7;
+    });
+    card.addEventListener('mouseenter', () => { raf=requestAnimationFrame(function anim(){ cX+=(tX-cX)*0.12; cY+=(tY-cY)*0.12; const d=Math.sqrt(cX*cX+cY*cY); card.style.transform=`perspective(700px) rotateX(${cX}deg) rotateY(${cY}deg) translateZ(${d*1.2}px)`; card.style.boxShadow=`0 ${8+d}px ${24+d*2}px rgba(0,0,0,0.5),0 0 ${d*3}px rgba(96,165,250,${d*0.012}),inset 0 1px 0 rgba(255,255,255,0.05)`; raf=requestAnimationFrame(anim); }); });
+    card.addEventListener('mouseleave', () => { cancelAnimationFrame(raf); tX=0; tY=0; (function reset(){ cX+=(0-cX)*0.1; cY+=(0-cY)*0.1; card.style.transform=`perspective(700px) rotateX(${cX}deg) rotateY(${cY}deg)`; if(Math.abs(cX)>0.05||Math.abs(cY)>0.05) raf=requestAnimationFrame(reset); else { card.style.transform=''; card.style.boxShadow=''; } })(); });
+  });
+}
+
+/* ─── RENDER ─── */
+function renderCertificates() {
+  const grid = document.getElementById('certificatesGrid');
+  if (!filteredCerts.length) {
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:4rem 1rem;color:var(--text-secondary);"><span style="font-size:3rem;display:block;margin-bottom:1rem;opacity:0.4;">🔍</span><h3 style="margin-bottom:0.5rem;">Keine Zertifikate gefunden</h3><p>Versuche eine andere Suche oder Filter</p></div>`;
+    return;
+  }
+  grid.innerHTML = filteredCerts.map(cert => `
+    <div class="cert-card" onclick="openModal(${cert.id})">
+      <div class="cert-header">
+        <div class="cert-number">${cert.number}</div>
+        <div class="cert-title">${cert.title}</div>
+        <div class="cert-date"><span>📅</span><span>${cert.date}</span></div>
+      </div>
+      <div class="cert-body">
+        <p class="cert-description">${cert.description}</p>
+        <div class="cert-skills">${cert.skills.slice(0,3).map(s=>`<span class="skill-tag">${s}</span>`).join('')}</div>
+      </div>
+      <div class="cert-footer">
+        <div class="cert-status"><span class="status-dot"></span>Bestanden</div>
+        <button class="cert-action">Details →</button>
+      </div>
+    </div>
+  `).join('');
+  applyTilt(grid.querySelectorAll('.cert-card'));
+}
+
+/* ─── MODAL ─── */
+function openModal(certId) {
+  const cert = certificates.find(c => c.id === certId);
+  if (!cert) return;
+  document.getElementById('modalNumber').textContent = cert.number;
+  document.getElementById('modalTitle').textContent = cert.title;
+  document.getElementById('modalDescription').textContent = cert.description;
+  document.getElementById('modalLearningGoals').textContent = cert.learningGoals;
+  document.getElementById('modalSkills').innerHTML = cert.skills.map(s=>`<span class="skill-tag">${s}</span>`).join('');
+
+  if (cert.grade) {
+    const color = cert.grade >= 5 ? '#4ade80' : cert.grade >= 4 ? '#60a5fa' : '#f59e0b';
+    const pct = ((cert.grade-1)/5)*100;
+    document.getElementById('modalGrade').textContent = cert.grade;
+    document.getElementById('modalGrade').style.color = color;
+    document.getElementById('modalGradeDate').textContent = 'Datum: '+(cert.grade_date||'–');
+    document.getElementById('modalGradeFill').style.background = color;
+    document.getElementById('modalGradeFill').style.boxShadow = `0 0 8px ${color}66`;
+    document.getElementById('modalGradeFill').style.width = '0%';
+    const bar = document.getElementById('modalGradeFill');
+    const obs = new IntersectionObserver(entries => { entries.forEach(e => { if(e.isIntersecting){setTimeout(()=>{bar.style.width=pct+'%'},150);obs.disconnect();} }); },{threshold:0.5});
+    obs.observe(document.getElementById('modalGradeBar'));
   }
 
-  async function openPdfFullscreen() {
-    if (!currentPdfDoc) return;
-    const overlay = document.getElementById('pdfFullscreenOverlay');
-    overlay.style.display = 'flex';
-    document.body.style.overflow = 'hidden';
-    const page = await currentPdfDoc.getPage(1);
-    const vp1 = page.getViewport({scale:1});
-    const scale = Math.min((window.innerWidth * 0.95) / vp1.width, (window.innerHeight * 0.9) / vp1.height);
-    const viewport = page.getViewport({ scale });
-    const canvas = document.getElementById('pdfFullscreenCanvas');
-    canvas.width = viewport.width;
-    canvas.height = viewport.height;
-    await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+  if (cert.pdfUrl && cert.pdfUrl.trim()) {
+    document.getElementById('pdfSection').style.display = 'block';
+    document.getElementById('noPdfSection').style.display = 'none';
+    loadPdfPreview(cert.pdfUrl);
+  } else {
+    document.getElementById('pdfSection').style.display = 'none';
+    document.getElementById('noPdfSection').style.display = 'block';
   }
 
-  function closePdfFullscreen() {
-    document.getElementById('pdfFullscreenOverlay').style.display = 'none';
-    document.body.style.overflow = 'auto';
+  const modal = document.getElementById('detailsModal');
+  modal.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  document.getElementById('detailsModal').classList.remove('active');
+  document.body.style.overflow = 'auto';
+}
+
+/* ─── FILTER / SEARCH ─── */
+function applyFilters() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  const f = document.querySelector('.filter-btn.active').dataset.filter;
+  filteredCerts = certificates.filter(c => {
+    const ms = c.title.toLowerCase().includes(q) || c.number.toLowerCase().includes(q);
+    const mf = f === 'all' || c.year.toString() === f;
+    return ms && mf;
+  });
+  renderCertificates();
+}
+
+document.getElementById('searchInput').addEventListener('input', applyFilters);
+document.querySelectorAll('.filter-btn').forEach(btn => btn.addEventListener('click', e => {
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  e.target.classList.add('active'); applyFilters();
+}));
+document.getElementById('detailsModal').addEventListener('click', e => { if(e.target.id==='detailsModal')closeModal(); });
+document.addEventListener('keydown', e => { if(e.key==='Escape')closeModal(); });
+
+renderCertificates();
+
+/* ─── PDF.JS ─── */
+let currentPdfDoc = null;
+
+async function loadPdfPreview(url) {
+  currentPdfDoc = null;
+  const canvas = document.getElementById('pdfCanvas');
+  const loading = document.getElementById('pdfLoading');
+  loading.style.display = 'flex'; canvas.style.display = 'none';
+  try {
+    const pdf = await pdfjsLib.getDocument(url).promise;
+    currentPdfDoc = pdf;
+    const page = await pdf.getPage(1);
+    const vp = page.getViewport({scale:1.5});
+    canvas.width = vp.width; canvas.height = vp.height;
+    await page.render({canvasContext:canvas.getContext('2d'),viewport:vp}).promise;
+    loading.style.display = 'none'; canvas.style.display = 'block';
+  } catch(e) {
+    loading.innerHTML = '<span style="color:var(--text-secondary);font-size:0.85rem;padding:2rem;text-align:center;">Vorschau konnte nicht geladen werden.</span>';
   }
+}
+
+async function openPdfFullscreen() {
+  if (!currentPdfDoc) return;
+  const overlay = document.getElementById('pdfFullscreenOverlay');
+  overlay.style.display = 'flex'; document.body.style.overflow = 'hidden';
+  const page = await currentPdfDoc.getPage(1);
+  const vp1 = page.getViewport({scale:1});
+  const scale = Math.min((window.innerWidth*0.95)/vp1.width,(window.innerHeight*0.9)/vp1.height);
+  const vp = page.getViewport({scale});
+  const canvas = document.getElementById('pdfFullscreenCanvas');
+  canvas.width = vp.width; canvas.height = vp.height;
+  await page.render({canvasContext:canvas.getContext('2d'),viewport:vp}).promise;
+}
+
+function closePdfFullscreen() {
+  document.getElementById('pdfFullscreenOverlay').style.display = 'none';
+  document.body.style.overflow = 'auto';
+}
 </script>
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
 </body>
 </html>
